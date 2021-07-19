@@ -14,7 +14,7 @@ pool:
   name: Hosted Windows 2019 with VS2019
 
 # Pipeline level Variables
-variables: 
+variables:
   StorageKey: 'PipelineWillGetThisValueRuntime'
   TerraformContainer: 'terraformstate'
   TerraformStorageAccount: 'macrost'
@@ -103,9 +103,9 @@ stages:
                 tokenPrefix: '__'
                 tokenSuffix: '__'
           - task: ms-devlabs.custom-terraform-tasks.custom-terraform-installer-task.TerraformInstaller@0
-            displayName: 'Install Terraform 0.13.7'
+            displayName: 'Install Terraform 1.0.2'
             inputs:
-              terraformVersion: 0.13.7
+              terraformVersion: 1.0.2
           - task: ms-devlabs.custom-terraform-tasks.custom-terraform-release-task.TerraformTaskV2@2
             displayName: 'Terraform : init'
             inputs:
