@@ -50,6 +50,13 @@ stages:
   jobs:
   - deployment: TerraformDeploy
     environment: Terraform
+    variables: 
+      StorageKey: 'PipelineWillGetThisValueRuntime'
+      TerraformContainer: 'terraformstate'
+      TerraformStorageAccount: 'macrost'
+      TerraformStorageRG: 'MacroLife-static'
+      KVname: 'macro-kv'
+      MacroLifeDeploymentRG: 'MacroLife'
     strategy:
       runOnce:
         on:
