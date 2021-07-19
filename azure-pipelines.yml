@@ -93,59 +93,51 @@ stages:
               azureSubscription: '$(TerraformStorageRG)'
               KeyVaultName: '$(KVname)'
               SecretsFilter: 'VM1AdminPWD,VM2AdminPWD'
-          - task: qetza.replacetokens.replacetokens-task.replacetokens@3
+          - task: replacetokens@3
             displayName: 'Replace tokens in Terraform file'
             inputs:
               targetFiles: |
                 **/*.tf
                 **/*.tfvars
-                escapeType: none
-                tokenPrefix: '__'
-                tokenSuffix: '__'
-          - task: ms-devlabs.custom-terraform-tasks.custom-terraform-installer-task.TerraformInstaller@0
-            displayName: 'Install Terraform 0.15.5'
+              escapeType: none
+              tokenPrefix: '__'
+              tokenSuffix: '__'
+          - task: TerraformInstaller@0
+            displayName: 'Install Terraform 1.0.2'
             inputs:
-              terraformVersion: 0.15.5
-          - task: ms-devlabs.custom-terraform-tasks.custom-terraform-release-task.TerraformTaskV2@2
+              terraformVersion: '1.0.2'
+          - task: TerraformTaskV2@2
             displayName: 'Terraform : init'
             inputs:
+              provider: 'azurerm'
+              command: 'init'
               workingDirectory: '$(Pipeline.Workspace)/terraform'
-              backendServiceArm: '$(MacroLifeDeploymentRG)'
+              backendServiceArm: '$(TerraformStorageRG)'
               backendAzureRmResourceGroupName: '$(TerraformStorageRG)'
               backendAzureRmStorageAccountName: '$(TerraformStorageAccount)'
               backendAzureRmContainerName: '$(TerraformContainer)'
-              backendAzureRmKey: '$(StorageKey)'
-          ### DISABLED by default, might be handy
-          # - task: ms-devlabs.custom-terraform-tasks.custom-terraform-release-task.TerraformTaskV2@2
-          #   displayName: 'Terraform : destroy -auto-approve'
-          #   inputs:
-          #     command: destroy
-          #     workingDirectory: '$(Pipeline.Workspace)/terraform'
-          #     commandOptions: '-auto-approve'
-          #     environmentServiceNameAzureRM: MacroLife
-          #     backendAzureRmResourceGroupName: '$(TerraformStorageRG)'
-          #     backendAzureRmStorageAccountName: '$(TerraformStorageAccount)'
-          #     backendAzureRmContainerName: '$(TerraformContainer)'
-          #     backendAzureRmKey: '$(StorageKey)'
-          #   enabled: false
-          - task: ms-devlabs.custom-terraform-tasks.custom-terraform-release-task.TerraformTaskV2@2
-            displayName: 'Terraform : plan'
+              backendAzureRmKey: 'terraform.tfstate'
+          - task: TerraformTaskV2@2
+            displayName: 'Terraform : destroy -auto-approve # DISABLED by default'
             inputs:
-              command: plan
+              provider: 'azurerm'
+              command: 'destroy'
               workingDirectory: '$(Pipeline.Workspace)/terraform'
-              environmentServiceNameAzureRM: '$(MacroLifeDeploymentRG)'
-              backendAzureRmResourceGroupName: '$(TerraformStorageRG)'
-              backendAzureRmStorageAccountName: '$(TerraformStorageAccount)'
-              backendAzureRmContainerName: '$(TerraformContainer)'
-              backendAzureRmKey: '$(StorageKey)'
-          - task: ms-devlabs.custom-terraform-tasks.custom-terraform-release-task.TerraformTaskV2@2
-            displayName: 'Terraform : apply -auto-approve'
-            inputs:
-              command: apply
-              workingDirectory: '$(System.DefaultWorkingDirectory)/_MacroLife-CI/drop'
               commandOptions: '-auto-approve'
               environmentServiceNameAzureRM: '$(MacroLifeDeploymentRG)'
-              backendAzureRmResourceGroupName: '$(TerraformStorageRG)'
-              backendAzureRmStorageAccountName: '$(TerraformStorageAccount)'
-              backendAzureRmContainerName: '$(TerraformContainer)'
-              backendAzureRmKey: '$(StorageKey)'
+            enabled: false
+          - task: TerraformTaskV2@2
+            displayName: 'Terraform : plan'
+            inputs:
+              provider: 'azurerm'
+              command: 'plan'
+              workingDirectory: '$(Pipeline.Workspace)/terraform'
+              environmentServiceNameAzureRM: '$(MacroLifeDeploymentRG)'
+          - task: TerraformTaskV2@2
+            displayName: 'Terraform : apply -auto-approve'
+            inputs:
+              provider: 'azurerm'
+              command: 'apply'
+              workingDirectory: '$(Pipeline.Workspace)/terraform'
+              commandOptions: '-auto-approve'
+              environmentServiceNameAzureRM: '$(MacroLifeDeploymentRG)'
