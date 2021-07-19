@@ -103,9 +103,9 @@ stages:
                 tokenPrefix: '__'
                 tokenSuffix: '__'
           - task: ms-devlabs.custom-terraform-tasks.custom-terraform-installer-task.TerraformInstaller@0
-            displayName: 'Install Terraform 0.15.5'
+            displayName: 'Install Terraform 0.13.7'
             inputs:
-              terraformVersion: 0.15.5
+              terraformVersion: 0.13.7
           - task: ms-devlabs.custom-terraform-tasks.custom-terraform-release-task.TerraformTaskV2@2
             displayName: 'Terraform : init'
             inputs:
