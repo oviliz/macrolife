@@ -115,19 +115,6 @@ stages:
               backendAzureRmStorageAccountName: '$(TerraformStorageAccount)'
               backendAzureRmContainerName: '$(TerraformContainer)'
               backendAzureRmKey: 'terraform.tfstate'
-          ### DISABLED by default, might be handy
-          # - task: ms-devlabs.custom-terraform-tasks.custom-terraform-release-task.TerraformTaskV2@2
-          #   displayName: 'Terraform : destroy -auto-approve'
-          #   inputs:
-          #     command: destroy
-          #     workingDirectory: '$(Pipeline.Workspace)/terraform'
-          #     commandOptions: '-auto-approve'
-          #     environmentServiceNameAzureRM: MacroLife
-          #     backendAzureRmResourceGroupName: '$(TerraformStorageRG)'
-          #     backendAzureRmStorageAccountName: '$(TerraformStorageAccount)'
-          #     backendAzureRmContainerName: '$(TerraformContainer)'
-          #     backendAzureRmKey: 'terraform.tfstate'
-          #   enabled: false
           - task: ms-devlabs.custom-terraform-tasks.custom-terraform-release-task.TerraformTaskV2@2
             displayName: 'Terraform : plan'
             inputs:
