@@ -14,7 +14,7 @@ pool:
   name: Hosted Windows 2019 with VS2019
 
 # Pipeline level Variables
-variables:
+variables: 
   StorageKey: 'PipelineWillGetThisValueRuntime'
   TerraformContainer: 'terraformstate'
   TerraformStorageAccount: 'macrost'
@@ -72,7 +72,7 @@ stages:
           - task: AzureCLI@1
             displayName: 'Create Storage Account and Container'
             inputs:
-              azureSubscription: '$(TerraformStorageRG)'
+              azureSubscription: 'MacroLife-static'
               scriptLocation: inlineScript
               inlineScript: |
                 call az storage account create --name $(TerraformStorageAccount) --resource-group $(TerraformStorageRG) --location uksouth --sku Standard_LRS
@@ -81,7 +81,7 @@ stages:
           - task: AzurePowerShell@3
             displayName: 'Get the Storage Key and update StorageKey Variable'
             inputs:
-              azureSubscription: '$(TerraformStorageRG)'
+              azureSubscription: 'MacroLife-static'
               ScriptType: InlineScript
               Inline: |
                 $key=(Get-AzureRmStorageAccountKey -ResourceGroupName $(TerraformStorageRG) -AccountName $(TerraformStorageAccount)).Value[0]
@@ -90,7 +90,7 @@ stages:
           - task: AzureKeyVault@2
             displayName: 'Ket the Key Vault Secrets'
             inputs:
-              azureSubscription: '$(TerraformStorageRG)'
+              azureSubscription: 'MacroLife-static'
               KeyVaultName: '$(KVname)'
               SecretsFilter: 'VM1AdminPWD,VM2AdminPWD'
           - task: replacetokens@3
@@ -99,34 +99,40 @@ stages:
               targetFiles: |
                 **/*.tf
                 **/*.tfvars
+              escapeType: none
               tokenPrefix: '__'
               tokenSuffix: '__'
           - task: TerraformInstaller@0
             displayName: 'Install Terraform 1.0.2'
             inputs:
               terraformVersion: '1.0.2'
-          - task: PowerShell@2
-            inputs:
-              targetType: 'inline'
-              script: 'Write-Output $(StorageKey)'
           - task: TerraformTaskV2@2
             displayName: 'Terraform : init'
             inputs:
               provider: 'azurerm'
               command: 'init'
               workingDirectory: '$(Pipeline.Workspace)/terraform'
-              backendServiceArm: '$(TerraformStorageRG)'
+              backendServiceArm: 'MacroLife-static'
               backendAzureRmResourceGroupName: '$(TerraformStorageRG)'
               backendAzureRmStorageAccountName: '$(TerraformStorageAccount)'
               backendAzureRmContainerName: '$(TerraformContainer)'
               backendAzureRmKey: 'terraform.tfstate'
+          - task: TerraformTaskV2@2
+            displayName: 'Terraform : destroy -auto-approve # DISABLED by default'
+            inputs:
+              provider: 'azurerm'
+              command: 'destroy'
+              workingDirectory: '$(Pipeline.Workspace)/terraform'
+              commandOptions: '-auto-approve'
+              environmentServiceNameAzureRM: 'MacroLife'
+            enabled: false
           - task: TerraformTaskV2@2
             displayName: 'Terraform : plan'
             inputs:
               provider: 'azurerm'
               command: 'plan'
               workingDirectory: '$(Pipeline.Workspace)/terraform'
-              environmentServiceNameAzureRM: '$(MacroLifeDeploymentRG)'
+              environmentServiceNameAzureRM: 'MacroLife'
           - task: TerraformTaskV2@2
             displayName: 'Terraform : apply -auto-approve'
             inputs:
@@ -134,4 +140,4 @@ stages:
               command: 'apply'
               workingDirectory: '$(Pipeline.Workspace)/terraform'
               commandOptions: '-auto-approve'
-              environmentServiceNameAzureRM: '$(MacroLifeDeploymentRG)'
+              environmentServiceNameAzureRM: 'MacroLife'
