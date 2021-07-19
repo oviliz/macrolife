@@ -1,0 +1,151 @@
+# Define the branches and paths which will trigger the Pipeline
+trigger:
+  batch: false
+  branches:
+    include:
+    - refs/heads/main
+  paths:
+    exclude:
+    - README.md
+    - readme
+
+# Agent Pool
+pool:
+  name: Hosted Windows 2019 with VS2019
+
+# Pipeline level Variables
+variables: 
+  StorageKey: 'PipelineWillGetThisValueRuntime'
+  TerraformContainer: 'terraformstate'
+  TerraformStorageAccount: 'macrost'
+  TerraformStorageRG: 'MacroLife-static'
+  KVname: 'macro-kv'
+  MacroLifeDeploymentRG: 'MacroLife'
+
+# A pipeline can contain 1 or more stages, and by default these run sequentially in the order in which they appear in the YAML
+# This behaviour can be overriden using the dependsOn condition to allow stages to run in parrallel
+stages:
+- stage: Build
+  # A Stage can contain 1 or more jobs, by default these run in parrallel (if enough build agents are available)
+  # This behaviour can be overriden using the dependsOn condition to force jobs to run in a specific order
+  jobs:
+  - job: Terraform
+    displayName: 'Terraform'
+    cancelTimeoutInMinutes: 1
+    pool:
+      name: Hosted Windows 2019 with VS2019
+    steps:
+    - checkout: self
+    - task: PublishPipelineArtifact@1
+      displayName: 'Create Terraform Artifact'
+      inputs:
+        targetPath: '$(Build.Repository.LocalPath)'
+        ArtifactName: terraform
+        publishLocation: 'pipeline'
+
+# Deployment Stages
+# Deploy IaC via Terraform
+- stage: TerraformDeploy
+  displayName: 'Deploy IaC via Terraform'
+ 
+  jobs:
+  - deployment: TerraformDeploy
+    strategy:
+      runOnce:
+        on:
+          failure:
+            steps:
+              - task: PowerShell@2
+                inputs:
+                  targetType: 'inline'
+                  script: |
+                    Write-Host "Oh no! Something went wrong"
+          success:
+            steps:
+              - task: PowerShell@2
+                inputs:
+                  targetType: 'inline'
+                  script: |
+                    Write-Host "Oh yeah! Deployment successfull"
+        deploy:
+          steps:
+          - task: AzureCLI@1
+            displayName: 'Create Storage Account and Container'
+            inputs:
+              azureSubscription: '$(TerraformStorageRG)'
+              scriptLocation: inlineScript
+              inlineScript: |
+                call az storage account create --name $(TerraformStorageAccount) --resource-group $(TerraformStorageRG) --location uksouth --sku Standard_LRS
+                call az storage container create --name $(TerraformContainer) --account-name $(TerraformStorageAccount)
+                call az storage account keys list -g $(TerraformStorageRG) -n $(TerraformStorageAccount)
+          - task: AzurePowerShell@3
+            displayName: 'Get the Storage Key and update StorageKey Variable'
+            inputs:
+              azureSubscription: '$(TerraformStorageRG)'
+              ScriptType: InlineScript
+              Inline: |
+                $key=(Get-AzureRmStorageAccountKey -ResourceGroupName $(TerraformStorageRG) -AccountName $(TerraformStorageAccount)).Value[0]
+                Write-Host "##vso[task.setvariable variable=StorageKey]$key"
+              azurePowerShellVersion: LatestVersion
+          - task: AzureKeyVault@2
+            displayName: 'Ket the Key Vault Secrets'
+            inputs:
+              azureSubscription: '$(TerraformStorageRG)'
+              KeyVaultName: '$(KVname)'
+              SecretsFilter: 'VM1AdminPWD,VM2AdminPWD'
+          - task: qetza.replacetokens.replacetokens-task.replacetokens@3
+            displayName: 'Replace tokens in Terraform file'
+            inputs:
+              targetFiles: |
+                **/*.tf
+                **/*.tfvars
+                escapeType: none
+                tokenPrefix: '__'
+                tokenSuffix: '__'
+          - task: ms-devlabs.custom-terraform-tasks.custom-terraform-installer-task.TerraformInstaller@0
+            displayName: 'Install Terraform 0.15.5'
+            inputs:
+              terraformVersion: 0.15.5
+          - task: ms-devlabs.custom-terraform-tasks.custom-terraform-release-task.TerraformTaskV2@2
+            displayName: 'Terraform : init'
+            inputs:
+              workingDirectory: '$(Pipeline.Workspace)/terraform'
+              backendServiceArm: '$(MacroLifeDeploymentRG)'
+              backendAzureRmResourceGroupName: '$(TerraformStorageRG)'
+              backendAzureRmStorageAccountName: '$(TerraformStorageAccount)'
+              backendAzureRmContainerName: '$(TerraformContainer)'
+              backendAzureRmKey: terraform.tfstate
+          ### DISABLED by default, might be handy
+          # - task: ms-devlabs.custom-terraform-tasks.custom-terraform-release-task.TerraformTaskV2@2
+          #   displayName: 'Terraform : destroy -auto-approve'
+          #   inputs:
+          #     command: destroy
+          #     workingDirectory: '$(Pipeline.Workspace)/terraform'
+          #     commandOptions: '-auto-approve'
+          #     environmentServiceNameAzureRM: MacroLife
+          #     backendAzureRmResourceGroupName: '$(TerraformStorageRG)'
+          #     backendAzureRmStorageAccountName: '$(TerraformStorageAccount)'
+          #     backendAzureRmContainerName: '$(TerraformContainer)'
+          #     backendAzureRmKey: '$(StorageKey)'
+          #   enabled: false
+          - task: ms-devlabs.custom-terraform-tasks.custom-terraform-release-task.TerraformTaskV2@2
+            displayName: 'Terraform : plan'
+            inputs:
+              command: plan
+              workingDirectory: '$(Pipeline.Workspace)/terraform'
+              environmentServiceNameAzureRM: '$(MacroLifeDeploymentRG)'
+              backendAzureRmResourceGroupName: '$(TerraformStorageRG)'
+              backendAzureRmStorageAccountName: '$(TerraformStorageAccount)'
+              backendAzureRmContainerName: '$(TerraformContainer)'
+              backendAzureRmKey: '$(StorageKey)'
+          - task: ms-devlabs.custom-terraform-tasks.custom-terraform-release-task.TerraformTaskV2@2
+            displayName: 'Terraform : apply -auto-approve'
+            inputs:
+              command: apply
+              workingDirectory: '$(System.DefaultWorkingDirectory)/_MacroLife-CI/drop'
+              commandOptions: '-auto-approve'
+              environmentServiceNameAzureRM: '$(MacroLifeDeploymentRG)'
+              backendAzureRmResourceGroupName: '$(TerraformStorageRG)'
+              backendAzureRmStorageAccountName: '$(TerraformStorageAccount)'
+              backendAzureRmContainerName: '$(TerraformContainer)'
+              backendAzureRmKey: '$(StorageKey)'
