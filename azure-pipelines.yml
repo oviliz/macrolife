@@ -93,38 +93,45 @@ stages:
               azureSubscription: '$(TerraformStorageRG)'
               KeyVaultName: '$(KVname)'
               SecretsFilter: 'VM1AdminPWD,VM2AdminPWD'
-          - task: qetza.replacetokens.replacetokens-task.replacetokens@3
+          - task: replacetokens@3
             displayName: 'Replace tokens in Terraform file'
             inputs:
               targetFiles: |
                 **/*.tf
                 **/*.tfvars
-                escapeType: none
-                tokenPrefix: '__'
-                tokenSuffix: '__'
-          - task: ms-devlabs.custom-terraform-tasks.custom-terraform-installer-task.TerraformInstaller@0
+              tokenPrefix: '__'
+              tokenSuffix: '__'
+          - task: TerraformInstaller@0
             displayName: 'Install Terraform 1.0.2'
             inputs:
-              terraformVersion: 1.0.2
-          - task: ms-devlabs.custom-terraform-tasks.custom-terraform-release-task.TerraformTaskV2@2
+              terraformVersion: '1.0.2'
+          - task: PowerShell@2
+            inputs:
+              targetType: 'inline'
+              script: 'Write-Output $(StorageKey)'
+          - task: TerraformTaskV2@2
             displayName: 'Terraform : init'
             inputs:
+              provider: 'azurerm'
+              command: 'init'
               workingDirectory: '$(Pipeline.Workspace)/terraform'
-              backendServiceArm: 'MacroLife'
+              backendServiceArm: '$(TerraformStorageRG)'
               backendAzureRmResourceGroupName: '$(TerraformStorageRG)'
               backendAzureRmStorageAccountName: '$(TerraformStorageAccount)'
               backendAzureRmContainerName: '$(TerraformContainer)'
               backendAzureRmKey: 'terraform.tfstate'
-          - task: ms-devlabs.custom-terraform-tasks.custom-terraform-release-task.TerraformTaskV2@2
+          - task: TerraformTaskV2@2
             displayName: 'Terraform : plan'
             inputs:
-              command: plan
+              provider: 'azurerm'
+              command: 'plan'
               workingDirectory: '$(Pipeline.Workspace)/terraform'
-              environmentServiceNameAzureRM: 'MacroLife'
-          - task: ms-devlabs.custom-terraform-tasks.custom-terraform-release-task.TerraformTaskV2@2
+              environmentServiceNameAzureRM: '$(MacroLifeDeploymentRG)'
+          - task: TerraformTaskV2@2
             displayName: 'Terraform : apply -auto-approve'
             inputs:
-              command: apply
+              provider: 'azurerm'
+              command: 'apply'
               workingDirectory: '$(Pipeline.Workspace)/terraform'
               commandOptions: '-auto-approve'
-              environmentServiceNameAzureRM: 'MacroLife'
+              environmentServiceNameAzureRM: '$(MacroLifeDeploymentRG)'
