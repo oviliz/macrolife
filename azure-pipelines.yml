@@ -47,9 +47,9 @@ stages:
 # Deploy IaC via Terraform
 - stage: TerraformDeploy
   displayName: 'Deploy IaC via Terraform'
- 
   jobs:
   - deployment: TerraformDeploy
+    environment: Terraform
     strategy:
       runOnce:
         on:
