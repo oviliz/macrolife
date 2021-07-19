@@ -114,7 +114,7 @@ stages:
               backendAzureRmResourceGroupName: '$(TerraformStorageRG)'
               backendAzureRmStorageAccountName: '$(TerraformStorageAccount)'
               backendAzureRmContainerName: '$(TerraformContainer)'
-              backendAzureRmKey: terraform.tfstate
+              backendAzureRmKey: '$(StorageKey)'
           ### DISABLED by default, might be handy
           # - task: ms-devlabs.custom-terraform-tasks.custom-terraform-release-task.TerraformTaskV2@2
           #   displayName: 'Terraform : destroy -auto-approve'
