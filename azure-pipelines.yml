@@ -114,7 +114,7 @@ stages:
               backendAzureRmResourceGroupName: '$(TerraformStorageRG)'
               backendAzureRmStorageAccountName: '$(TerraformStorageAccount)'
               backendAzureRmContainerName: '$(TerraformContainer)'
-              backendAzureRmKey: '$(StorageKey)'
+              backendAzureRmKey: 'terraform.tfstate'
           ### DISABLED by default, might be handy
           # - task: ms-devlabs.custom-terraform-tasks.custom-terraform-release-task.TerraformTaskV2@2
           #   displayName: 'Terraform : destroy -auto-approve'
@@ -126,7 +126,7 @@ stages:
           #     backendAzureRmResourceGroupName: '$(TerraformStorageRG)'
           #     backendAzureRmStorageAccountName: '$(TerraformStorageAccount)'
           #     backendAzureRmContainerName: '$(TerraformContainer)'
-          #     backendAzureRmKey: '$(StorageKey)'
+          #     backendAzureRmKey: 'terraform.tfstate'
           #   enabled: false
           - task: ms-devlabs.custom-terraform-tasks.custom-terraform-release-task.TerraformTaskV2@2
             displayName: 'Terraform : plan'
@@ -134,18 +134,10 @@ stages:
               command: plan
               workingDirectory: '$(Pipeline.Workspace)/terraform'
               environmentServiceNameAzureRM: '$(MacroLifeDeploymentRG)'
-              backendAzureRmResourceGroupName: '$(TerraformStorageRG)'
-              backendAzureRmStorageAccountName: '$(TerraformStorageAccount)'
-              backendAzureRmContainerName: '$(TerraformContainer)'
-              backendAzureRmKey: '$(StorageKey)'
           - task: ms-devlabs.custom-terraform-tasks.custom-terraform-release-task.TerraformTaskV2@2
             displayName: 'Terraform : apply -auto-approve'
             inputs:
               command: apply
-              workingDirectory: '$(System.DefaultWorkingDirectory)/_MacroLife-CI/drop'
+              workingDirectory: '$(Pipeline.Workspace)/terraform'
               commandOptions: '-auto-approve'
               environmentServiceNameAzureRM: '$(MacroLifeDeploymentRG)'
-              backendAzureRmResourceGroupName: '$(TerraformStorageRG)'
-              backendAzureRmStorageAccountName: '$(TerraformStorageAccount)'
-              backendAzureRmContainerName: '$(TerraformContainer)'
-              backendAzureRmKey: '$(StorageKey)'
