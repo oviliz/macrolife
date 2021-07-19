@@ -110,7 +110,7 @@ stages:
             displayName: 'Terraform : init'
             inputs:
               workingDirectory: '$(Pipeline.Workspace)/terraform'
-              backendServiceArm: '$(MacroLifeDeploymentRG)'
+              backendServiceArm: 'MacroLife'
               backendAzureRmResourceGroupName: '$(TerraformStorageRG)'
               backendAzureRmStorageAccountName: '$(TerraformStorageAccount)'
               backendAzureRmContainerName: '$(TerraformContainer)'
@@ -133,11 +133,11 @@ stages:
             inputs:
               command: plan
               workingDirectory: '$(Pipeline.Workspace)/terraform'
-              environmentServiceNameAzureRM: '$(MacroLifeDeploymentRG)'
+              environmentServiceNameAzureRM: 'MacroLife'
           - task: ms-devlabs.custom-terraform-tasks.custom-terraform-release-task.TerraformTaskV2@2
             displayName: 'Terraform : apply -auto-approve'
             inputs:
               command: apply
               workingDirectory: '$(Pipeline.Workspace)/terraform'
               commandOptions: '-auto-approve'
-              environmentServiceNameAzureRM: '$(MacroLifeDeploymentRG)'
+              environmentServiceNameAzureRM: 'MacroLife'
