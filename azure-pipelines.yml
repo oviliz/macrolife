@@ -50,6 +50,8 @@ stages:
   jobs:
   - deployment: TerraformDeploy
     environment: Terraform
+    pool:
+      name: Hosted Windows 2019 with VS2019
     variables: 
       StorageKey: 'PipelineWillGetThisValueRuntime'
       TerraformContainer: 'terraformstate'
@@ -113,38 +115,45 @@ stages:
             displayName: 'Install Terraform 1.0.2'
             inputs:
               terraformVersion: '1.0.2'
-          - task: TerraformTaskV2@2
-            displayName: 'Terraform : init'
-            inputs:
-              provider: 'azurerm'
-              command: 'init'
-              workingDirectory: '$(Pipeline.Workspace)/terraform'
-              backendServiceArm: 'MacroLife-static'
-              backendAzureRmResourceGroupName: '$(TerraformStorageRG)'
-              backendAzureRmStorageAccountName: '$(TerraformStorageAccount)'
-              backendAzureRmContainerName: '$(TerraformContainer)'
-              backendAzureRmKey: 'terraform.tfstate'
-          - task: TerraformTaskV2@2
-            displayName: 'Terraform : destroy -auto-approve # DISABLED by default'
-            inputs:
-              provider: 'azurerm'
-              command: 'destroy'
-              workingDirectory: '$(Pipeline.Workspace)/terraform'
-              commandOptions: '-auto-approve'
-              environmentServiceNameAzureRM: 'MacroLife'
-            enabled: false
-          - task: TerraformTaskV2@2
-            displayName: 'Terraform : plan'
-            inputs:
-              provider: 'azurerm'
-              command: 'plan'
-              workingDirectory: '$(Pipeline.Workspace)/terraform'
-              environmentServiceNameAzureRM: 'MacroLife'
-          - task: TerraformTaskV2@2
-            displayName: 'Terraform : apply -auto-approve'
-            inputs:
-              provider: 'azurerm'
-              command: 'apply'
-              workingDirectory: '$(Pipeline.Workspace)/terraform'
-              commandOptions: '-auto-approve'
-              environmentServiceNameAzureRM: 'MacroLife'
+          - script: |
+              set -e
+              terraform init -input=false
+              terraform plan -input=false
+              terraform apply -input=false -auto-approve
+            name: 'RunTerraform'
+            displayName: 'Run Terraform'
+          # - task: TerraformTaskV2@2
+          #   displayName: 'Terraform : init'
+          #   inputs:
+          #     provider: 'azurerm'
+          #     command: 'init'
+          #     workingDirectory: '$(Pipeline.Workspace)/terraform'
+          #     backendServiceArm: 'MacroLife-static'
+          #     backendAzureRmResourceGroupName: '$(TerraformStorageRG)'
+          #     backendAzureRmStorageAccountName: '$(TerraformStorageAccount)'
+          #     backendAzureRmContainerName: '$(TerraformContainer)'
+          #     backendAzureRmKey: 'terraform.tfstate'
+          # - task: TerraformTaskV2@2
+          #   displayName: 'Terraform : destroy -auto-approve # DISABLED by default'
+          #   inputs:
+          #     provider: 'azurerm'
+          #     command: 'destroy'
+          #     workingDirectory: '$(Pipeline.Workspace)/terraform'
+          #     commandOptions: '-auto-approve'
+          #     environmentServiceNameAzureRM: 'MacroLife'
+          #   enabled: false
+          # - task: TerraformTaskV2@2
+          #   displayName: 'Terraform : plan'
+          #   inputs:
+          #     provider: 'azurerm'
+          #     command: 'plan'
+          #     workingDirectory: '$(Pipeline.Workspace)/terraform'
+          #     environmentServiceNameAzureRM: 'MacroLife'
+          # - task: TerraformTaskV2@2
+          #   displayName: 'Terraform : apply -auto-approve'
+          #   inputs:
+          #     provider: 'azurerm'
+          #     command: 'apply'
+          #     workingDirectory: '$(Pipeline.Workspace)/terraform'
+          #     commandOptions: '-auto-approve'
+          #     environmentServiceNameAzureRM: 'MacroLife'
