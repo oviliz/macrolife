@@ -51,7 +51,7 @@ stages:
   - deployment: TerraformDeploy
     environment: Terraform
     pool:
-      name: Hosted Windows 2019 with VS2019
+      vmImage: 'ubuntu-latest'
     variables: 
       StorageKey: 'PipelineWillGetThisValueRuntime'
       TerraformContainer: 'terraformstate'
@@ -114,9 +114,9 @@ stages:
               tokenPrefix: '__'
               tokenSuffix: '__'
           - task: TerraformInstaller@0
-            displayName: 'Install Terraform 1.0.2'
+            displayName: 'Install Terraform 1.0.3'
             inputs:
-              terraformVersion: '1.0.2'
+              terraformVersion: '1.0.3'
           - task: CmdLine@2
             displayName: 'Run Terraform'
             inputs:
