@@ -115,13 +115,21 @@ stages:
             displayName: 'Install Terraform 1.0.2'
             inputs:
               terraformVersion: '1.0.2'
-          - script: |
-              set -e
-              terraform init -input=false
-              terraform plan -input=false
-              terraform apply -input=false -auto-approve
-            name: 'RunTerraform'
+          - task: CmdLine@2
             displayName: 'Run Terraform'
+            inputs:
+              script: |
+                terraform init -input=false
+                terraform plan -input=false
+                terraform apply -input=false -auto-approve
+              workingDirectory: '$(Pipeline.Workspace)/terraform'
+          # - script: |
+          #     set -e
+          #     terraform init -input=false
+          #     terraform plan -input=false
+          #     terraform apply -input=false -auto-approve
+          #   name: 'RunTerraform'
+          #   displayName: 'Run Terraform'
           # - task: TerraformTaskV2@2
           #   displayName: 'Terraform : init'
           #   inputs:
