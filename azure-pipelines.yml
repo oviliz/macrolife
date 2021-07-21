@@ -84,9 +84,9 @@ stages:
               azureSubscription: 'MacroLife-static'
               scriptLocation: inlineScript
               inlineScript: |
-                call az storage account create --name $(TerraformStorageAccount) --resource-group $(TerraformStorageRG) --location uksouth --sku Standard_LRS
-                call az storage container create --name $(TerraformContainer) --account-name $(TerraformStorageAccount)
-                call az storage account keys list -g $(TerraformStorageRG) -n $(TerraformStorageAccount)
+                az storage account create --name $(TerraformStorageAccount) --resource-group $(TerraformStorageRG) --location uksouth --sku Standard_LRS
+                az storage container create --name $(TerraformContainer) --account-name $(TerraformStorageAccount)
+                az storage account keys list -g $(TerraformStorageRG) -n $(TerraformStorageAccount)
           - task: AzurePowerShell@3
             displayName: 'Get the Storage Key and update StorageKey Variable'
             inputs:
