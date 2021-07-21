@@ -95,6 +95,8 @@ stages:
               Inline: |
                 $key=(Get-AzureRmStorageAccountKey -ResourceGroupName $(TerraformStorageRG) -AccountName $(TerraformStorageAccount)).Value[0]
                 Write-Host "##vso[task.setvariable variable=StorageKey]$key"
+                Write-Output $StorageKey
+                Write-Output $key
               azurePowerShellVersion: LatestVersion
           - task: AzureKeyVault@2
             displayName: 'Ket the Key Vault Secrets'
