@@ -51,7 +51,7 @@ stages:
   - deployment: TerraformDeploy
     environment: Terraform
     pool:
-      vmImage: 'ubuntu-latest'
+      name: Hosted Windows 2019 with VS2019
     variables: 
       StorageKey: 'PipelineWillGetThisValueRuntime'
       TerraformContainer: 'terraformstate'
@@ -93,7 +93,7 @@ stages:
               azureSubscription: 'MacroLife-static'
               ScriptType: InlineScript
               Inline: |
-                $key=(Get-AzureRmStorageAccountKey -ResourceGroupName $(TerraformStorageRG) -AccountName $(TerraformStorageAccount)).Value[0]
+                $key=(Get-AzureRmStorageAccountKey -ResourceGroupName $TerraformStorageRG -AccountName $TerraformStorageAccount).Value[0]
                 Write-Host "##vso[task.setvariable variable=StorageKey]$key"
                 Write-Output $StorageKey
                 Write-Output $key
