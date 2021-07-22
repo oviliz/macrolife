@@ -51,7 +51,7 @@ stages:
   - deployment: TerraformDeploy
     environment: Terraform
     pool:
-      name: Hosted Windows 2019 with VS2019
+      vmImage: 'ubuntu-latest'
     variables: 
       StorageKey: 'PipelineWillGetThisValueRuntime'
       TerraformContainer: 'terraformstate'
@@ -87,17 +87,17 @@ stages:
                 az storage account create --name $(TerraformStorageAccount) --resource-group $(TerraformStorageRG) --location uksouth --sku Standard_LRS
                 az storage container create --name $(TerraformContainer) --account-name $(TerraformStorageAccount)
                 az storage account keys list -g $(TerraformStorageRG) -n $(TerraformStorageAccount)
-          - task: AzurePowerShell@3
-            displayName: 'Get the Storage Key and update StorageKey Variable'
-            inputs:
-              azureSubscription: 'MacroLife-static'
-              ScriptType: InlineScript
-              Inline: |
-                $key=(Get-AzureRmStorageAccountKey -ResourceGroupName $TerraformStorageRG -AccountName $TerraformStorageAccount).Value[0]
-                Write-Host "##vso[task.setvariable variable=StorageKey]$key"
-                Write-Output $StorageKey
-                Write-Output $key
-              azurePowerShellVersion: LatestVersion
+          # - task: AzurePowerShell@3
+          #   displayName: 'Get the Storage Key and update StorageKey Variable'
+          #   inputs:
+          #     azureSubscription: 'MacroLife-static'
+          #     ScriptType: InlineScript
+          #     Inline: |
+          #       $key=(Get-AzureRmStorageAccountKey -ResourceGroupName $(TerraformStorageRG) -AccountName $(TerraformStorageAccount)).Value[0]
+          #       Write-Host "##vso[task.setvariable variable=StorageKey]$key"
+          #       Write-Output $StorageKey
+          #       Write-Output $key
+          #     azurePowerShellVersion: LatestVersion
           - task: AzureKeyVault@2
             displayName: 'Ket the Key Vault Secrets'
             inputs:
