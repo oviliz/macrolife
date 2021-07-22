@@ -103,9 +103,9 @@ stages:
               tokenPrefix: '__'
               tokenSuffix: '__'
           - task: TerraformInstaller@0
-            displayName: 'Install Terraform 1.0.2'
+            displayName: 'Install Terraform 1.0.3'
             inputs:
-              terraformVersion: '1.0.2'
+              terraformVersion: '1.0.3'
           - task: TerraformTaskV2@2
             displayName: 'Terraform : init'
             inputs:
@@ -118,12 +118,11 @@ stages:
               backendAzureRmContainerName: '$(TerraformContainer)'
               backendAzureRmKey: 'terraform.tfstate'
           - task: TerraformTaskV2@2
-            displayName: 'Terraform : destroy -auto-approve # DISABLED by default'
+            displayName: 'Terraform : destroy # might be handy, DISABLED by default'
             inputs:
               provider: 'azurerm'
               command: 'destroy'
               workingDirectory: '$(Pipeline.Workspace)/terraform'
-              commandOptions: '-auto-approve'
               environmentServiceNameAzureRM: '$(MacroLifeDeploymentRG)'
             enabled: false
           - task: TerraformTaskV2@2
